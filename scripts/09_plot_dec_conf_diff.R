@@ -120,6 +120,35 @@ for (e in plots) {
     reframe(count = n()) %>% 
     pivot_wider(names_from = task, values_from = count)
     
+  # Get effect size
+  p_load(effectsize)
+  effect_size_data <- data_to_plot %>% 
+    select(-cond_code) %>% 
+    pivot_wider(names_from = task, values_from = value) %>% 
+    group_by(bias_source) %>% 
+    nest() %>% 
+    mutate(d = map(data, ~cohens_d(y=.x$pse, x=.x$pmu, paired = TRUE))) %>% 
+    mutate(d = unlist(map(d, "Cohens_d"))) %>% 
+    select(-data) %>% 
+    mutate(d_lab = paste0('italic(d) == ', round(d,2)))
+  
+  # get credible intervals
+  data_to_plot %>% 
+    select(-cond_code) %>% 
+    pivot_wider(names_from = task, values_from = value) %>% 
+    filter(if_all(c(pse,pmu), ~!is.na(.x))) %>% 
+    group_by(bias_source) %>% 
+    select(-participant,-matches('confidence_type')) %>% 
+    nest(data = c(pse,pmu)) %>%
+    mutate(
+      bf_ttest = map(data, ~ ttestBF(x = .x$pmu, y = .x$pse, paired = TRUE, rscale = 0.707))
+    ) %>% 
+    mutate(ci = map(bf_ttest, bayestestR::ci, method='HDI')) %>% 
+    unnest(ci) %>% 
+    mutate(ci_label = sprintf('95%% CrI = [%.1f - %.1f]', CI_low, CI_high)) %>% 
+    mutate(bias_source = factor(bias_source, levels = c('mullerlyer', 'baserate', 'payoff'))) %>% 
+    arrange(bias_source)
+  
   # Summarize data
   summ_data <-
     data_to_plot %>% 
@@ -150,7 +179,7 @@ for (e in plots) {
     ylim(0, 30)
   
   plot_name <- sprintf('plots/dec-conf_%s.png', e)
-  ggsave(plot_name, width = 4, height = 1.8, scale = 1.3, dpi = 600)
+  ggsave(plot_name, width = 4, height = 1.8, scale = 1.3, dpi = 600, device=png)
   
 }
 

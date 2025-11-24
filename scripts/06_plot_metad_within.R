@@ -145,6 +145,19 @@ hdi <-
          hdi_ub = unlist(map(hdi, ~.x[,2]))) %>% 
   select(-c(data, hdi))
 
+draws_logmratio %>% 
+  mutate(bias_source = factor(bias_source, levels = c('mullerlyer', 'baserate', 'payoff'))) %>% 
+  group_by(confidence_type, bias_source, bias_direction) %>% 
+  nest() %>% 
+  mutate(hdi = map(data, ~ci(.x$value, method = 'HDI'))) %>%
+  select(-data) %>% 
+  pivot_wider(names_from = bias_direction, values_from = hdi) %>% 
+  mutate(hdi_diff = map2(.x = long, .y = short, ~.x - .y)) %>% 
+  unnest(hdi_diff) %>% 
+  mutate(ci_label = sprintf('95%% CrI = [%.2f - %.2f]', CI_low, CI_high)) %>% 
+  mutate(bias_source = factor(bias_source, levels = c('mullerlyer', 'baserate', 'payoff'))) %>% 
+  arrange(confidence_type, bias_source)
+
 # Base distribution plot by bias source and bias direction
 p_mcmc <-
   draws_logmratio %>%
@@ -203,4 +216,3 @@ p_mcmc
 ggsave('plots/mratio_all_conditions_within.png',
        device = png,
        width = 8, height = 5, dpi=600, scale=.9)
-

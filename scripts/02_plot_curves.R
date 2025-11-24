@@ -322,3 +322,65 @@ ggsave(here('plots/concurrent_all_results.png'), width = 6, height = 10, dpi = 1
 p_decision_delayed / p_reproduction_delayed / p_confidence_delayed
 ggsave(here('plots/delayed_all_results.png'), width = 6, height = 10, dpi = 1200, scale=.8, device=png)
 
+
+# Credible interval report for paper --------------------------------------
+
+# note this credible interval will vary slightly every time the analysis is run
+
+# Concurrent
+
+# get credible intervals
+pse_concurrent %>%
+  select(-data) %>% 
+  get_ci() %>% 
+  mutate(bias_source = factor(bias_source, levels = c('mullerlyer', 'baserate', 'payoff'))) %>% 
+  arrange(bias_source)
+
+# get credible intervals
+rep_ref_concurrent %>% 
+  select(-data) %>% 
+  get_ci() %>% 
+  mutate(bias_source = factor(bias_source, levels = c('mullerlyer', 'baserate', 'payoff'))) %>% 
+  arrange(bias_source)
+
+# get credible intervals
+lowest_confidence_concurrent %>% 
+  select(-value) %>% 
+  get_ci() %>% 
+  mutate(bias_source = factor(bias_source, levels = c('mullerlyer', 'baserate', 'payoff'))) %>% 
+  arrange(bias_source)
+
+
+
+# Delayed -----------------------------------------------------------------
+
+# get credible intervals
+pse_delayed %>% 
+  select(-data) %>% 
+  get_ci() %>% 
+  mutate(bias_source = factor(bias_source, levels = c('mullerlyer', 'baserate', 'payoff'))) %>% 
+  arrange(bias_source)
+
+# get credible intervals
+rep_ref_delayed %>% 
+  select(-data) %>% 
+  get_ci() %>% 
+  mutate(bias_source = factor(bias_source, levels = c('mullerlyer', 'baserate', 'payoff'))) %>% 
+  arrange(bias_source)
+
+
+# get credible intervals
+lowest_confidence_delayed %>% 
+  select(-value) %>% 
+  get_ci() %>% 
+  mutate(bias_source = factor(bias_source, levels = c('mullerlyer', 'baserate', 'payoff'))) %>% 
+  arrange(bias_source)
+
+# Combined reproduction data
+
+# get credible intervals
+rep_ref_combined %>% 
+  select(-data) %>% 
+  get_ci() %>% 
+  mutate(bias_source = factor(bias_source, levels = c('mullerlyer', 'baserate', 'payoff'))) %>% 
+  arrange(bias_source)

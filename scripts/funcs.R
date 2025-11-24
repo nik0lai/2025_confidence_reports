@@ -497,3 +497,19 @@ basic_point_plot <- function(data, bf_d_y_position, one_tail=TRUE) {
   return(p)
   
 }
+
+get_ci <- function(data) {
+  data %>% 
+    pivot_wider(names_from = bias_direction, values_from = target_length) %>% 
+    filter(if_all(c(short,long), ~!is.na(.x))) %>% 
+    group_by(bias_source) %>% 
+    select(-participant,-matches('confidence_type')) %>% 
+    nest(data = c(short, long)) %>%
+    mutate(
+      bf_ttest = map(data, ~ ttestBF(x = .x$short, y = .x$long, paired = TRUE, rscale = 0.707))
+    ) %>% 
+    mutate(ci = map(bf_ttest, bayestestR::ci, method='HDI')) %>% 
+    unnest(ci) %>% 
+    mutate(ci_label = sprintf('95%% CrI = [%.1f - %.1f]', CI_low, CI_high))
+  
+}
